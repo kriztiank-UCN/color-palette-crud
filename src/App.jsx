@@ -1,7 +1,7 @@
-// How to set up React with Firebase/Firestore (Part 1)
-// https://youtu.be/ig91zc-ERSE
+// How to set up React with Firebase/Firestore (Part 2)
+// https://youtu.be/YpuyxBfYRT8
 
-import { onSnapshot, collection } from "firebase/firestore"
+import { onSnapshot, collection, addDoc } from "firebase/firestore"
 import { useEffect, useState } from "react"
 import { db } from "./firebase"
 
@@ -21,34 +21,34 @@ export default function App() {
   const [colors, setColors] = useState([{ name: "Loading...", id: "initial" }])
   console.log(colors)
 
-  // useEffect(() => {
-  //   // db: handle to Database, colors: collection name
-  //  const unsub = onSnapshot(
-  //     collection(db, "colors"),
-  //     // callback function with snapshot from the database
-  //     snapshot => {
-  //       console.log(snapshot.docs.map(doc => doc.data()))
-  //     })
-  //   return () => unsub()
-  // }, [])
-
-  // Refactor
   useEffect(
     () =>
       // db: handle to Database, colors: collection name
       onSnapshot(
         collection(db, "colors"),
         // callback function with snapshot from the database
-        // snapshot => setColors(snapshot.docs.map(doc => doc.data()))
         // Return the data and the id, manually with a custom property, from the database
         snapshot => setColors(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })))
       ),
     []
   )
 
+  const handleNew = async () => {
+    const name = prompt("Enter color name")
+    const value = prompt("Enter color value")
+
+    const collectionRef = collection(db, "colors")
+    const payload = { name, value }
+    // await addDoc(collectionRef, payload)
+    const docRef = await addDoc(collectionRef, payload)
+    console.log("The new ID is: " + docRef.id)
+  }
+
   return (
     <div className="root">
-      <button className="button">New</button>
+      <button className="button" onClick={handleNew}>
+        New
+      </button>
       <ul>
         {colors.map(color => (
           <li key={color.id}>
