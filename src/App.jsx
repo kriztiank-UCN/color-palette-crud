@@ -1,7 +1,7 @@
-// How to set up React with Firebase/Firestore (Part 2)
-// https://youtu.be/YpuyxBfYRT8
+// How to set up React with Firebase/Firestore v9 (Part 3 | setDoc)
+// https://youtu.be/TNTMTJrxIY0
 
-import { onSnapshot, collection, addDoc } from "firebase/firestore"
+import { onSnapshot, collection, addDoc, setDoc, doc } from "firebase/firestore"
 import { useEffect, useState } from "react"
 import { db } from "./firebase"
 
@@ -44,6 +44,17 @@ export default function App() {
     console.log("The new ID is: " + docRef.id)
   }
 
+  const handleEdit = async id => {
+    const name = prompt("Enter color name")
+    const value = prompt("Enter color value")
+
+    const docRef = doc(db, "colors", id)
+    const payload = { name, value }
+
+    setDoc(docRef, payload)
+    console.log(id)
+  }
+
   return (
     <div className="root">
       <button className="button" onClick={handleNew}>
@@ -52,7 +63,10 @@ export default function App() {
       <ul>
         {colors.map(color => (
           <li key={color.id}>
-            <a href="#">edit</a> <Dot color={color.value} />
+            <a href="#" onClick={() => handleEdit(color.id)}>
+              edit
+            </a>
+            <Dot color={color.value} />
             {color.name}
           </li>
         ))}
