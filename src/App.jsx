@@ -5,12 +5,15 @@ import {
   onSnapshot,
   collection,
   addDoc,
-  setDoc,
+  // setDoc, overwrites the whole thing, updateDoc only updates the fields that you specify
+  updateDoc,
   doc,
   deleteDoc,
   query,
   where,
+  orderBy,
   getDocs,
+  serverTimestamp,
 } from "firebase/firestore"
 import { useEffect, useState } from "react"
 import { db } from "./firebase"
@@ -29,26 +32,38 @@ const Dot = ({ color }) => {
 
 export default function App() {
   const [colors, setColors] = useState([{ name: "Loading...", id: "initial" }])
-  console.log(colors)
+  // console.log(colors)
 
-  useEffect(
-    () =>
-      // db: handle to Database, colors: collection name
-      onSnapshot(
-        collection(db, "colors"),
-        // callback function with snapshot from the database
-        // Return the data and the id, manually with a custom property, from the database
-        snapshot => setColors(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })))
-      ),
-    []
-  )
+  // Fetch realtime data from Firestore without order
+  // useEffect(
+  //   () =>
+  //     // db: handle to Database, colors: collection name
+  //     onSnapshot(
+  //       collection(db, "colors"),
+  //       // callback function with snapshot from the database
+  //       // Return the data and the id, manually with a custom property, from the database
+  //       snapshot => setColors(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })))
+  //     ),
+  //   []
+  // )
+
+  // Fetch realtime data from Firestore, with orderBy by timestamp
+  useEffect(() => {
+    const collectionRef = collection(db, "colors")
+    const q = query(collectionRef, orderBy("timestamp", "desc"))
+
+    const unsub = onSnapshot(q, snapshot =>
+      setColors(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })))
+    )
+    return () => unsub()
+  }, [])
 
   const handleNew = async () => {
     const name = prompt("Enter color name")
     const value = prompt("Enter color value")
 
     const collectionRef = collection(db, "colors")
-    const payload = { name, value }
+    const payload = { name, value, timestamp: serverTimestamp() }
     // await addDoc(collectionRef, payload)
     const docRef = await addDoc(collectionRef, payload)
     console.log("The new ID is: " + docRef.id)
@@ -59,9 +74,9 @@ export default function App() {
     const value = prompt("Enter color value")
 
     const docRef = doc(db, "colors", id)
-    const payload = { name, value }
+    const payload = { name, value, timestamp: serverTimestamp() };
 
-    setDoc(docRef, payload)
+    updateDoc(docRef, payload)
     console.log(id)
   }
 
