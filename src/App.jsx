@@ -1,7 +1,17 @@
-// How to set up React with Firebase/Firestore v9 (Part 3 | setDoc)
-// https://youtu.be/TNTMTJrxIY0
+// How to set up React with Firebase/Firestore v9 (Part 4 | deleteDoc & query delete)
+// https://youtu.be/uVPtYLGPL80
 
-import { onSnapshot, collection, addDoc, setDoc, doc } from "firebase/firestore"
+import {
+  onSnapshot,
+  collection,
+  addDoc,
+  setDoc,
+  doc,
+  deleteDoc,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore"
 import { useEffect, useState } from "react"
 import { db } from "./firebase"
 
@@ -55,17 +65,45 @@ export default function App() {
     console.log(id)
   }
 
+  const handleDelete = async id => {
+    const docRef = doc(db, "colors", id)
+    await deleteDoc(docRef)
+  }
+
+  const handleQueryDelete = async () => {
+    const userInputName = prompt("Enter color name")
+
+    const collectionRef = collection(db, "colors")
+    const q = query(collectionRef, where("name", "==", userInputName))
+    const snapshot = await getDocs(q)
+
+    const results = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }))
+    // console.log(results)
+
+    results.forEach(async result => {
+      const docRef = doc(db, "colors", result.id)
+      await deleteDoc(docRef)
+    })
+  }
+
   return (
     <div className="root">
       <button className="button" onClick={handleNew}>
         New
       </button>
+      <button className="button" onClick={handleQueryDelete}>
+        Query Delete
+      </button>
+
       <ul>
         {colors.map(color => (
           <li key={color.id}>
-            <a href="#" onClick={() => handleEdit(color.id)}>
+            <button className="button2" onClick={() => handleEdit(color.id)}>
               edit
-            </a>
+            </button>
+            <button className="button2" onClick={() => handleDelete(color.id)}>
+              delete
+            </button>
             <Dot color={color.value} />
             {color.name}
           </li>
